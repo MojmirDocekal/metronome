@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import sys
@@ -11,7 +11,7 @@ class Putch():
 
     def __init__(self, data):
         # the ascii code says 'go to begin of line, erase all, stand ready to write'
-        sys.stdout.write("\r\x1b[K" + data.__str__())
+        sys.stdout.write("\r\x1b[K" + str(data))
         sys.stdout.flush()
 
 

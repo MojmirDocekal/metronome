@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-*- coding: utf-8 -*-
 '''
 metronome.py - play a tone at the desired rate
@@ -24,13 +24,13 @@ instrument_bank_nr = 0
 
 def tellduration(starttime):
     duration = int(time()) - int(starttime)
-    minutes = duration / 60 # integer division - gives the lower integer in python2
+    minutes = duration // 60 # integer division for Python 3
     seconds = duration % 60
     sleep(0.3)
     if minutes == 0:
-        print 'interrupted by user after ' + str(seconds) + ' seconds.'
+        print('interrupted by user after ' + str(seconds) + ' seconds.')
     else:
-        print 'interrupted by user after ' + str(minutes) + ' minutes ' + str(seconds) + ' seconds.'
+        print('interrupted by user after ' + str(minutes) + ' minutes ' + str(seconds) + ' seconds.')
 
 
 class Printer():
@@ -39,7 +39,7 @@ class Printer():
         #putch(msg_type)
         #sleep(.1)
         #putch('')
-        if notes_dict.has_key('note'):
+        if 'note' in notes_dict:
             putch(notes_dict['note'])
 
 
@@ -54,11 +54,11 @@ class Player():
             - 'notes' : ['C-3']
             - 'channel' : 1
         '''
-        if notes_dict.has_key('note'):
+        if 'note' in notes_dict:
             if isinstance(notes_dict['note'], str):
-                note = notes_dict['note']
-                note.velocity = notes_dict['velocity']
-                note.channel = notes_dict['channel']
+                note = Note(notes_dict['note'])
+                note.velocity = notes_dict.get('velocity', 100)
+                note.channel = notes_dict.get('channel', 1)
                 fluidsynth.play_Note(note)
 
 
@@ -89,7 +89,22 @@ class Metronome():
         self.seq = fluidsynth.FluidSynthSequencer()
         self.seq.init()
         self.seq.load_sound_font(SF2)
-        self.seq.start_audio_output(driver="alsa")
+        
+        # Try different audio drivers - alsa, pulseaudio, jack, default
+        audio_drivers = ['pulseaudio', 'alsa', 'jack', 'default']
+        audio_started = False
+        for driver in audio_drivers:
+            try:
+                self.seq.start_audio_output(driver=driver)
+                audio_started = True
+                print(f'Using audio driver: {driver}')
+                break
+            except Exception as e:
+                print(f'Could not start audio with {driver}: {e}')
+        
+        if not audio_started:
+            print('Warning: No audio driver available. The metronome will run but produce no sound.')
+            print('Try installing fluidsynth and an audio driver (alsa, pulseaudio, or jack).')
 
         self.seq.set_instrument(0, 0)
         self.seq.main_volume(0, 127)
